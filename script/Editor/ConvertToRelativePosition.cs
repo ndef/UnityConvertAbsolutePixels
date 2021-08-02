@@ -5,14 +5,18 @@ using UnityEditor;
 
 public class ConvertToRelativePosition : MonoBehaviour {
 
-    private const string menuPath = "Tools/UI/";
+    private const string menuPath = "Utilities/RectTransform/";
 
     // Convert a UI element's pixel offsets into anchor-relative position values.
-    [MenuItem(menuPath + "Convert to Relative Position")]
+    [MenuItem(menuPath + "Make RectTransform Use Relative Position")]
     static void Convert() {
-
         RectTransform rt = Selection.activeTransform.GetComponent<RectTransform>();
-        RectTransform parentRt = Selection.activeTransform.parent.GetComponent<RectTransform>();
+        ConvertRectTransform(rt);
+    }
+
+    private static void ConvertRectTransform(RectTransform rt) {
+
+        RectTransform parentRt = rt.parent.GetComponent<RectTransform>();
         Vector2 anchorMin = rt.anchorMin;
         Vector2 anchorMax = rt.anchorMax;
         Vector2 offsetMin = rt.offsetMin;
@@ -45,13 +49,13 @@ public class ConvertToRelativePosition : MonoBehaviour {
 
     // Validate the menu item, so that it will be deactivated if the user doesn't have
     // an appropriate UI element selected.
-    [MenuItem(menuPath + "Convert to Relative Position", true)]
+    [MenuItem(menuPath + "Make RectTransform Use Relative Position", true, 500)]
     static bool ValidateConvert() {
         return ValidateMenuItems();
     }
 
     // Convert a UI element's anchor-relative position values into pixel offsets.
-    [MenuItem(menuPath + "Convert to Absolute Position")]
+    [MenuItem(menuPath + "Make RectTransform Use Absolute Position")]
     static void Reverse() {
 
         RectTransform rt = Selection.activeTransform.GetComponent<RectTransform>();
@@ -88,7 +92,7 @@ public class ConvertToRelativePosition : MonoBehaviour {
 
     // Validate the menu item, so that it will be deactivated if the user doesn't have
     // an appropriate UI element selected.
-    [MenuItem(menuPath + "Convert to Absolute Position", true)]
+    [MenuItem(menuPath + "Make RectTransform Use Absolute Position", true, 501)]
     static bool ValidateReverse() {
         return ValidateMenuItems();
     }
@@ -98,9 +102,59 @@ public class ConvertToRelativePosition : MonoBehaviour {
 
         if (Selection.activeTransform != null) {
             if (Selection.activeTransform.GetComponent<RectTransform>() != null) {
-                if (Selection.activeTransform.parent.GetComponent<RectTransform>() != null) {
-                    return true;
+                if (Selection.activeTransform.parent != null) {
+                    if (Selection.activeTransform.parent.GetComponent<RectTransform>() != null) {
+                        return true;
+                    }
                 }
+            }
+        }
+
+        return false;
+
+    }
+
+    // Convert the pixel offsets of all UI elements in a Canvas to anchor-relative position values.
+    [MenuItem(menuPath + "Make Canvas Use Only Relative Positions")]
+    static void ConvertCanvas() {
+
+        Canvas canvas = Selection.activeTransform.GetComponent<Canvas>();
+        List<RectTransform> allRectTransforms = new List<RectTransform>();
+
+        RecursivelyAdd(allRectTransforms, canvas.transform);
+        
+        foreach (RectTransform rt in allRectTransforms) {
+            if (rt.parent.GetComponent<RectTransform>() != null) {
+                ConvertRectTransform(rt);
+            }
+        }
+
+    }
+
+    private static void RecursivelyAdd(List<RectTransform> list, Transform t) {
+
+        RectTransform rtObj;
+        foreach (Transform child in t) {
+
+            rtObj = child.GetComponent<RectTransform>();
+            if (rtObj != null) {
+                list.Add(rtObj);
+            }
+
+            RecursivelyAdd(list, child);
+
+        }
+
+    }
+
+    // Validate the menu item, so that it will be deactivated if the user doesn't have
+    // an appropriate UI element selected.
+    [MenuItem(menuPath + "Make Canvas Use Only Relative Positions", true, 600)]
+    static bool ValidateConvertCanvas() {
+
+        if (Selection.activeTransform != null) {
+            if (Selection.activeTransform.GetComponent<Canvas>() != null) {
+                return true;
             }
         }
 
